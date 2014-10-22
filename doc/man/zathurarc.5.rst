@@ -161,6 +161,7 @@ are currently available:
     Space      Space
     Super      Windows key
     Tab        Tab
+    Print      Print key
 
 Of course it is possible to combine those special keys with a modifier. The
 usage of those keys should be explained by the following examples:
@@ -206,35 +207,103 @@ Shortcut functions
 ^^^^^^^^^^^^^^^^^^
 The following shortcut functions can be mapped:
 
+* ``abort``
 
-::
+  Switch back to normal mode.
 
-    Function          Description
+* ``adjust_window``
 
-    abort             Switch back to normal mode
-    adjust_window     Adjust page width
-    change_mode       Change current mode
-    display_link      Display link target
-    focus_inputbar    Focus inputbar
-    follow            Follow a link
-    goto              Go to a certain page
-    jumplist          Move forwards/backwards in the jumplist
-    navigate          Navigate to the next/previous page
-    navigate_index    Navigate through the index
-    print             Show the print dialog
-    quit              Quit zathura
-    recolor           Recolor the pages
-    reload            Reload the document
-    rotate            Rotate the page
-    scroll            Scroll
-    search            Search next/previous item
-    set               Set an option
-    toggle_fullscreen Toggle fullscreen
-    toggle_index      Show or hide index
-    toggle_inputbar   Show or hide inputbar
-    toggle_page_mode  Toggle between one and multiple pages per row
-    toggle_statusbar  Show or hide statusbar
-    zoom              Zoom in or out
+  Adjust page width. Possible arguments are ``best-fit`` and ``width``.
+
+* ``change_mode``
+
+  Change current mode. Pass the desired mode as argument.
+
+* ``display_link``:
+
+  Display link target.
+
+* ``focus_inputbar``
+
+  Focus inputbar.
+
+* ``follow``
+
+  Follow a link.
+
+* ``goto``
+
+  Go to a certain page.
+
+* ``jumplist``
+
+  Move forwards/backwards in the jumplist.
+
+* ``navigate``
+
+  Navigate to the next/previous page.
+
+* ``navigate_index``
+
+  Navigate through the index.
+
+* ``print``
+
+  Show the print dialog.
+
+* ``quit``
+
+  Quit zathura.
+
+* ``recolor``
+
+  Recolor pages.
+
+* ``reload``
+
+  Reload the document.
+
+* ``rotate``
+
+  Rotate the page. Pass ``rotate-ccw`` as argument for counterclockwise rotation
+  and ``rotate-cw`` for clockwise rotation.
+
+* ``scroll``
+
+  Scroll.
+
+* ``search``
+
+  Search next/previous item. Pass ``forward`` as argument to search for the next
+  hit and ``backward`` to search for the previous hit.
+
+* ``set``
+
+  Set an option.
+
+* ``toggle_fullscreen``
+
+  Toggle fullscreen.
+
+* ``toggle_index``
+
+  Show or hide index.
+
+* ``toggle_inputbar``
+
+  Show or hide inputbar.
+
+* ``toggle_page_mode``
+
+  Toggle between one and multiple pages per row.
+
+* ``toggle_statusbar``
+
+  Show or hide statusbar.
+
+* ``zoom``
+
+  Zoom in or out.
 
 Pass arguments
 ^^^^^^^^^^^^^^
@@ -525,6 +594,13 @@ Defines the vertical padding of the statusbar and notificationbar
 * Value type: Integer
 * Default value: 2
 
+window-icon
+^^^^^^^^^^^
+Defines the path for a icon to be used as window icon.
+
+* Value type: String
+* Default value:
+
 window-height
 ^^^^^^^^^^^^^
 Defines the window height on startup
@@ -565,6 +641,15 @@ Defines if the number of pages per row should be honored when advancing a page.
 
 * Value type: Boolean
 * Default value: false
+
+database
+^^^^^^^^
+Defines the database backend to use for bookmarks and input history. Possible
+values are "plain", "sqlite" (if built with sqlite support) and "null". If
+"null" is used, bookmarks and input history will not be stored.
+
+* Value type: String
+* Default value: plain
 
 incremental-search
 ^^^^^^^^^^^^^^^^^^
@@ -656,6 +741,13 @@ Defines the color value that is used to represent light colors in recoloring mod
 * Value type: String
 * Default value: #000000
 
+recolor-reverse-video
+^^^^^^^^^^^^^^^^^^^^^
+Defines if original image colors should be kept while recoloring.
+
+* Value type: Boolean
+* Default value: false
+
 render-loading
 ^^^^^^^^^^^^^^
 Defines if the "Loading..." text should be displayed if a page is rendered.
@@ -697,7 +789,7 @@ Defines the proportion of the current viewing area that should be
 visible after scrolling a full page.
 
 * Value type: Float
-* Default value: 0.1
+* Default value: 0
 
 scroll-wrap
 ^^^^^^^^^^^
@@ -709,6 +801,13 @@ Defines if the last/first page should be wrapped
 scroll-page-aware
 ^^^^^^^^^^^^^^^^^
 Defines if scrolling by half or full pages stops at page boundaries.
+
+* Value type: Boolean
+* Default value: false
+
+smooth-scroll
+^^^^^^^^^^^^^
+Defines if scrolling via touchpad should be smooth(only available with gtk >= 3.4).
 
 * Value type: Boolean
 * Default value: false
@@ -761,7 +860,7 @@ zoom-center
 En/Disables horizontally centered zooming.
 
 * Value type: Boolean
-* Default value: False
+* Default value: false
 
 zoom-max
 ^^^^^^^^
@@ -795,12 +894,62 @@ middle mouse button, or the Shift-Insert key combination.
 * Value type: String
 * Default value: primary
 
-syntex-dbus-service
-^^^^^^^^^^^^^^^^^^^
-En/Disables the D-Bus service required for synctex forward synchronization.
+selection-notification
+^^^^^^^^^^^^^^^^^^^^^^
+Defines if a notification should be displayed after selecting text.
 
 * Value type: Boolean
 * Default value: true
+
+synctex
+^^^^^^^
+En/Disables SyncTeX backward synchronization support.
+
+* Value type: Boolean
+* Default value: true
+
+synctex-editor-command
+^^^^^^^^^^^^^^^^^^^^^^
+Defines the command executed for SyncTeX backward synchronization.
+
+* Value type: String
+* Default value:
+
+syntex-dbus-service
+^^^^^^^^^^^^^^^^^^^
+En/Disables the D-Bus service required for SyncTeX forward synchronization.
+
+* Value type: Boolean
+* Default value: true
+
+index-fg
+^^^^^^^^
+Defines the foreground color of the index mode.
+
+* Value type: String
+* Default value: #DDDDDD
+
+index-bg
+^^^^^^^^
+Define the background color of the index mode.
+
+* Value type: String
+* Default value: #232323
+
+index-active-fg
+^^^^^^^^^^^^^^^
+Defines the foreground color of the selected element in index mode.
+
+* Value type: String
+* Default value: #232323
+
+index-active-bg
+^^^^^^^^^^^^^^^
+Define the background color of the selected element in index mode.
+
+* Value type: String
+* Default value: #9FBC00
+
 
 SEE ALSO
 ========

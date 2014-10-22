@@ -27,6 +27,27 @@ LIBS += $(MAGIC_LIB)
 CPPFLAGS += -DWITH_MAGIC
 endif
 
+ifneq ($(WITH_SYSTEM_SYNCTEX),0)
+INCS   += $(SYNCTEX_INC)
+LIBS   += $(SYNCTEX_LIB)
+else
+INCS   += $(ZLIB_INC)
+LIBS   += $(ZLIB_LIB)
+ZSOURCE += $(wildcard ../synctex/*.c)
+CPPFLAGS += -I../synctex
+
+ifeq (,$(findstring -DSYNCTEX_VERBOSE=0,${CPPFLAGS}))
+CPPFLAGS += -DSYNCTEX_VERBOSE=0
+endif
+endif
+
+ifeq (,$(findstring -Isynctex,${CPPFLAGS}))
+CPPFLAGS += -Isynctex
+endif
+ifeq (,$(findstring -DSYNCTEX_VERBOSE=0,${CPPFLAGS}))
+CPPFLAGS += -DSYNCTEX_VERBOSE=0
+endif
+
 ZOBJECTS = ${ZSOURCE:.c=.o}
 
 all: ${PROJECT}

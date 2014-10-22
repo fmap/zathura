@@ -31,17 +31,17 @@ cb_jumplist_change(girara_session_t* session, const char* name,
   g_return_if_fail(name != NULL);
   zathura_t* zathura = session->global.data;
 
-  if (g_strcmp0(name, "jumplist-size") != 0) {
-    return;
-  }
+  const int* ivalue = value;
 
-  if (*(int *)value < 0) {
+  if (*ivalue < 0) {
     zathura->jumplist.max_size = 0;
   } else {
-    zathura->jumplist.max_size = *(int *)value;
+    zathura->jumplist.max_size = *ivalue;
   }
 
-  zathura_jumplist_trim(zathura);
+  if (zathura->jumplist.list != NULL && zathura->jumplist.size != 0) {
+    zathura_jumplist_trim(zathura);
+  }
 }
 
 static void
@@ -176,15 +176,22 @@ config_load_default(zathura_t* zathura)
   girara_setting_add(gsession, "render-loading-fg",      NULL,      STRING, false, _("'Loading ...' foreground color"),  cb_color_change, NULL);
   girara_setting_set(gsession, "render-loading-fg",      "#000000");
 
+  girara_setting_add(gsession, "index-fg",        "#DDDDDD", STRING, true, _("Index mode foreground color"), NULL, NULL);
+  girara_setting_add(gsession, "index-bg",        "#232323", STRING, true, _("Index mode background color"), NULL, NULL);
+  girara_setting_add(gsession, "index-active-fg", "#232323", STRING, true, _("Index mode foreground color (active element)"), NULL, NULL);
+  girara_setting_add(gsession, "index-active-bg", "#9FBC00", STRING, true, _("Index mode background color (active element)"), NULL, NULL);
+
   bool_value = false;
   girara_setting_add(gsession, "recolor",                &bool_value,  BOOLEAN, false, _("Recolor pages"), cb_setting_recolor_change, NULL);
   bool_value = false;
   girara_setting_add(gsession, "recolor-keephue",        &bool_value,  BOOLEAN, false, _("When recoloring keep original hue and adjust lightness only"), cb_setting_recolor_keep_hue_change, NULL);
   bool_value = false;
+  girara_setting_add(gsession, "recolor-reverse-video",  &bool_value,  BOOLEAN, false, _("When recoloring keep original image colors"), cb_setting_recolor_keep_reverse_video_change, NULL);
+  bool_value = false;
   girara_setting_add(gsession, "scroll-wrap",            &bool_value,  BOOLEAN, false, _("Wrap scrolling"), NULL, NULL);
   bool_value = false;
   girara_setting_add(gsession, "scroll-page-aware",      &bool_value,  BOOLEAN, false, _("Page aware scrolling"), NULL, NULL);
-  bool_value = false;
+  bool_value = true;
   girara_setting_add(gsession, "advance-pages-per-row",  &bool_value,  BOOLEAN, false, _("Advance number of pages per row"), NULL, NULL);
   bool_value = false;
   girara_setting_add(gsession, "zoom-center",            &bool_value,  BOOLEAN, false, _("Horizontally centered zoom"), NULL, NULL);
@@ -218,12 +225,16 @@ config_load_default(zathura_t* zathura)
   girara_setting_add(gsession, "window-title-page",      &bool_value,  BOOLEAN, false, _("Display the page number in the window title"), NULL, NULL);
   bool_value = false;
   girara_setting_add(gsession, "statusbar-basename",     &bool_value,  BOOLEAN, false, _("Use basename of the file in the statusbar"), NULL, NULL);
-  bool_value = false;
+  bool_value = true;
   girara_setting_add(gsession, "synctex",                &bool_value,  BOOLEAN, false, _("Enable synctex support"), NULL, NULL);
+  string_value = "";
+  girara_setting_add(gsession, "synctex-editor-command", string_value, STRING,  false, _("Synctex editor command"), NULL, NULL);
   bool_value = true;
   girara_setting_add(gsession, "dbus-service",           &bool_value,  BOOLEAN, false, _("Enable D-Bus service"), NULL, NULL);
   string_value = "primary";
   girara_setting_add(gsession, "selection-clipboard",    string_value, STRING,  false, _("The clipboard into which mouse-selected data will be written"), NULL, NULL);
+  bool_value = true;
+  girara_setting_add(gsession, "selection-notification", &bool_value,  BOOLEAN, false, _("Enable notification after selecting text"), NULL, NULL);
 
 #define DEFAULT_SHORTCUTS(mode) \
   girara_shortcut_add(gsession, 0,                GDK_KEY_a,          NULL, sc_adjust_window,           (mode),     ZATHURA_ADJUST_BESTFIT, NULL); \
@@ -312,16 +323,18 @@ config_load_default(zathura_t* zathura)
   girara_shortcut_add(gsession, 0,                0,                  "zZ", sc_zoom,                    (mode),     ZOOM_SPECIFIC,          NULL);
 
 #define DEFAULT_MOUSE_EVENTS(mode) \
-  girara_mouse_event_add(gsession, 0, 0,                                   sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_UP,      UP,    NULL); \
-  girara_mouse_event_add(gsession, 0, 0,                                   sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_DOWN,    DOWN,  NULL); \
-  girara_mouse_event_add(gsession, 0, 0,                                   sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_LEFT,    LEFT,  NULL); \
-  girara_mouse_event_add(gsession, 0, 0,                                   sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_RIGHT,   RIGHT, NULL); \
+  girara_mouse_event_add(gsession, 0, 0,                                   sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_UP,            UP,            NULL); \
+  girara_mouse_event_add(gsession, 0, 0,                                   sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_DOWN,          DOWN,          NULL); \
+  girara_mouse_event_add(gsession, 0, 0,                                   sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_LEFT,          LEFT,          NULL); \
+  girara_mouse_event_add(gsession, 0, 0,                                   sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_RIGHT,         RIGHT,         NULL); \
+  girara_mouse_event_add(gsession, 0, 0,                                   sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_BIDIRECTIONAL, BIDIRECTIONAL, NULL); \
 \
   girara_mouse_event_add(gsession, GDK_SHIFT_MASK, 0,                      sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_UP,      LEFT,  NULL); \
   girara_mouse_event_add(gsession, GDK_SHIFT_MASK, 0,                      sc_mouse_scroll, (mode),     GIRARA_EVENT_SCROLL_DOWN,    RIGHT, NULL); \
 \
-  girara_mouse_event_add(gsession, GDK_CONTROL_MASK, 0,                    sc_mouse_zoom,   (mode),     GIRARA_EVENT_SCROLL_UP,      UP,   NULL); \
-  girara_mouse_event_add(gsession, GDK_CONTROL_MASK, 0,                    sc_mouse_zoom,   (mode),     GIRARA_EVENT_SCROLL_DOWN,    DOWN, NULL); \
+  girara_mouse_event_add(gsession, GDK_CONTROL_MASK, 0,                    sc_mouse_zoom,   (mode),     GIRARA_EVENT_SCROLL_UP,            UP,            NULL); \
+  girara_mouse_event_add(gsession, GDK_CONTROL_MASK, 0,                    sc_mouse_zoom,   (mode),     GIRARA_EVENT_SCROLL_DOWN,          DOWN,          NULL); \
+  girara_mouse_event_add(gsession, GDK_CONTROL_MASK, 0,                    sc_mouse_zoom,   (mode),     GIRARA_EVENT_SCROLL_BIDIRECTIONAL, BIDIRECTIONAL, NULL); \
   girara_mouse_event_add(gsession, 0,                GIRARA_MOUSE_BUTTON2, sc_mouse_scroll, (mode),     GIRARA_EVENT_BUTTON_PRESS,   0,    NULL); \
   girara_mouse_event_add(gsession, GDK_BUTTON2_MASK, GIRARA_MOUSE_BUTTON2, sc_mouse_scroll, (mode),     GIRARA_EVENT_BUTTON_RELEASE, 0,    NULL); \
   girara_mouse_event_add(gsession, GDK_BUTTON2_MASK, 0,                    sc_mouse_scroll, (mode),     GIRARA_EVENT_MOTION_NOTIFY,  0,    NULL); \
@@ -413,6 +426,7 @@ config_load_default(zathura_t* zathura)
   girara_inputbar_command_add(gsession, "close",      NULL,   cmd_close,           NULL,         _("Close current file"));
   girara_inputbar_command_add(gsession, "info",       NULL,   cmd_info,            NULL,         _("Show file information"));
   girara_inputbar_command_add(gsession, "exec",       NULL,   cmd_exec,            NULL,         _("Execute a command"));
+  girara_inputbar_command_add(gsession, "!",          NULL,   cmd_exec,            NULL,         _("Execute a command")); /* like vim */
   girara_inputbar_command_add(gsession, "help",       NULL,   cmd_help,            NULL,         _("Show help"));
   girara_inputbar_command_add(gsession, "open",       "o",    cmd_open,            cc_open,      _("Open document"));
   girara_inputbar_command_add(gsession, "quit",       "q",    cmd_quit,            NULL,         _("Close zathura"));
